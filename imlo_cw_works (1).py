@@ -53,7 +53,8 @@ print(train_set.data.shape)
 print(test_set.data.shape)
 print(train_set.classes)
 
-'''from logging import exception
+'''Pytorch tutorial lecture:
+from logging import exception 
 class my_NN(nn.Module):
   def __init__(self, input_features, hidden_layers, output_features, activation_function=F.relu):
     super(my_NN, self).__init__()
