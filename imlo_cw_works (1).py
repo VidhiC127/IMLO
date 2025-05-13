@@ -23,25 +23,7 @@ from sklearn import datasets
 import pandas as pd
 
 Batch_Size = 64
-EPOCHS = 100
-
-#return mean and std of data
-def get_mean_std(loader):
-    channels_sum, channels_squared_sum, num_batches = 0
-
-'''train_transformation = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.RandomErasing(p=0.5, scale=(0.02, 0.1), value=0, inplace=False)
-])
-
-test_transformation = transforms.Compose([
-    transforms.ToTensor()
-])'''
-
-transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-])
+EPOCHS = 50
 
 train_set = torchvision.datasets.CIFAR10("Data", download=True, train=True, transform=transform) #was transform = train_tr
 train_loader = torch.utils.data.DataLoader(train_set, batch_size=Batch_Size, shuffle=False)
@@ -53,40 +35,14 @@ print(train_set.data.shape)
 print(test_set.data.shape)
 print(train_set.classes)
 
-'''Pytorch tutorial lecture:
-from logging import exception 
-class my_NN(nn.Module):
-  def __init__(self, input_features, hidden_layers, output_features, activation_function=F.relu):
-    super(my_NN, self).__init__()
-    #Check if it has hidden layers.
-    if len(hidden_layers) < 1:
-      raise Exception("NN must have atleast 1 hidden layer")
+mean = train_set.data.mean() / 255
+std = train_set.data.std() / 255
+print(mean, std)
 
-    self.layers = []
-
-    #Append a layer that has input featurfes and one hidden layer.
-    #Creating a linear layer.
-    self.layers.append(nn.Linear(input_features, hidden_layers[0]))
-
-    #Add input layer.
-    self.add_module("input_layer", self.layers[0])
-
-    #Use for loop to add all the hidden layers.
-    for i in range(len(hidden_layers)):
-      self.layers.append(nn.Linear(hidden_layers[i-1], hidden_layers[i]))
-      self.add_module(f"Hidden Layer {i}", self.layers[i])
-
-    #Add output layer.
-    self.layers.append(nn.Linear(hidden_layers[-1], output_features))
-    self.add_module("output_layer", self.layers[-1])
-
-    #Set activation function.
-    self.activation_function = activation_function
-
-  def forward(self, x):
-    for layer in self.layers:
-      x = self.activation(layer(x))
-    return self.layers(x)'''
+transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize(mean, std)
+])
 
 class CIFAR10_nn(nn.Module):
   def __init__(self):
