@@ -25,15 +25,7 @@ import pandas as pd
 Batch_Size = 64
 EPOCHS = 50
 
-train_set = torchvision.datasets.CIFAR10("Data", download=True, train=True, transform=transform) #was transform = train_tr
-train_loader = torch.utils.data.DataLoader(train_set, batch_size=Batch_Size, shuffle=False)
-
-test_set = torchvision.datasets.CIFAR10("Data", download=True, train=False, transform=transform) # was test_tr
-test_loader = torch.utils.data.DataLoader(test_set, batch_size=Batch_Size, shuffle=False)
-
-print(train_set.data.shape)
-print(test_set.data.shape)
-print(train_set.classes)
+train_set = torchvision.datasets.CIFAR10("Data", download-True, train=True, transform=ToTensor())
 
 mean = train_set.data.mean() / 255
 std = train_set.data.std() / 255
@@ -43,6 +35,16 @@ transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean, std)
 ])
+
+train_set = torchvision.datasets.CIFAR10("Data", download=True, train=True, transform=transform) #was transform = train_tr
+train_loader = torch.utils.data.DataLoader(train_set, batch_size=Batch_Size, shuffle=False)
+
+test_set = torchvision.datasets.CIFAR10("Data", download=True, train=False, transform=transform) # was test_tr
+test_loader = torch.utils.data.DataLoader(test_set, batch_size=Batch_Size, shuffle=False)
+
+print(train_set.data.shape)
+print(test_set.data.shape)
+print(train_set.classes)
 
 class CIFAR10_nn(nn.Module):
   def __init__(self):
