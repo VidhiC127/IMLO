@@ -27,8 +27,8 @@ EPOCHS = 50
 
 train_set = torchvision.datasets.CIFAR10("Data", download-True, train=True, transform=ToTensor())
 
-mean = train_set.data.mean() / 255
-std = train_set.data.std() / 255
+mean = train_set.data.mean(axis=(0,1,2)) / 255
+std = train_set.data.std(axis=(0,1,2)) / 255
 print(mean, std)
 
 transform = transforms.Compose([
@@ -37,7 +37,7 @@ transform = transforms.Compose([
 ])
 
 train_set = torchvision.datasets.CIFAR10("Data", download=True, train=True, transform=transform) #was transform = train_tr
-train_loader = torch.utils.data.DataLoader(train_set, batch_size=Batch_Size, shuffle=False)
+train_loader = torch.utils.data.DataLoader(train_set, batch_size=Batch_Size, shuffle=True)
 
 test_set = torchvision.datasets.CIFAR10("Data", download=True, train=False, transform=transform) # was test_tr
 test_loader = torch.utils.data.DataLoader(test_set, batch_size=Batch_Size, shuffle=False)
@@ -79,19 +79,22 @@ class CIFAR10_nn(nn.Module):
     x = self.fc2(x)
     return x
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print(device)
+
 net = CIFAR10_nn()
 print(net)
 
-correct = 0
-total = 0
+net.to(device)
 
 criterion = nn.CrossEntropyLoss()
 optimiser = optim.Adam(net.parameters(), lr=0.001)
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-print(device)
+train_losses = []
+accuracies = []
 
 for epoch in range(EPOCHS):
+  running_loss = 0.0
   net.train()
   for i, data in enumerate(train_loader, 0):
     inputs, labels = data
@@ -103,15 +106,46 @@ for epoch in range(EPOCHS):
     loss.backward()
     optimiser.step()
 
-net.eval()  # Set model to evaluation mode
-with torch.no_grad():  # No need to track gradients
-    for data in test_loader:
-        images, labels = data
-        images, labels = images.to(device), labels.to(device)
-        outputs = net(images)
-        _, predicted = torch.max(outputs.data, 1)
-        correct += (predicted == labels).sum().item()
-        total += labels.size(0)
+    running_loss += loss.item()
 
-accuracy = 100 * correct / total  # Should now be <= 100%
-print(f'Test Accuracy: {accuracy:.2f}%')
+  epoch_loss = running_loss / len(train_loader)
+  train_losses.append(epoch_loss)
+
+  #Evaluation: 
+  correct = 0
+  total = 0
+  
+  net.eval()  # Set model to evaluation mode
+  
+  with torch.no_grad():  # No need to track gradients
+    for data in test_loader:
+      images, labels = data
+      images, labels = images.to(device), labels.to(device)
+      outputs = net(images)
+      _, predicted = torch.max(outputs.data, 1)
+      correct += (predicted == labels).sum().item()
+      total += labels.size(0)
+  
+  accuracy = 100 * correct / total  # Should now be <= 100%
+  print(f'Epoch {epoch+1}/{EPOCHS} - Loss: {epoch_loss:.4f}, Accuracy: {accuracy:.2f}%')
+
+
+#Plot:
+plt.figure(figsize=(10, 5))
+plt.subplot(1, 2, 1)
+plt.plot(train_losses, label='Training Loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.title('Training Loss')
+plt.legend()
+
+plt.subplot(1, 2, 2)
+plt.plot(accuracies, label='Test Accuracy')
+plt.ylim(0, 100)
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy (%)')
+plt.title('Test Accuracy')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
