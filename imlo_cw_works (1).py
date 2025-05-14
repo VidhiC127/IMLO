@@ -52,8 +52,11 @@ class CIFAR10_nn(nn.Module):
 
     #3 input channels, 32 output feature maps, 3x3 filter size, padding keeps image dimensions the same
     self.conv1 = nn.Conv2d(3, 32, 3, padding=1)
+    self.bn1 = nn.BatchNorm2d(32) #Added batch norm for conv1 output
     self.conv2 = nn.Conv2d(32, 64, 3, padding=1)
+    self.bn2 = nn.BatchNorm2d(64) #Added batch norm for conv2 output
     self.conv3 = nn.Conv2d(64, 128, 3, padding=1) #New conv layer
+    self.bn3 = nn.BatchNorm2d(128) #Added batch norm for conv3 output
 
     #pooling layers reduce image size, takes max value in each 2x2 region
     self.pool = nn.MaxPool2d(2, 2)
@@ -65,19 +68,19 @@ class CIFAR10_nn(nn.Module):
 
     #Dropout randomly turns off 25% of neurons during training
     #--> Prevents nn from memorising the training data
-    self.dropout = nn.Dropout(0.25)
+    self.dropout = nn.Dropout(0.1)
 
   #Defines how data flows through the network
   def forward(self, x):
     
     #1. 1st conv layer -> reLU activation -> pooling
-    x = self.pool(F.relu(self.conv1(x))) #Img size: 32x32 -> 16x16
+    x = self.pool(F.relu(self.bn1(self.conv1(x)))) #Img size: 32x32 -> 16x16
 
     #2. 2nd conv layer -> reLU activation -> pooling
-    x = self.pool(F.relu(self.conv2(x))) #Img size: 16x16 -> 8x8
+    x = self.pool(F.relu(self.bn2(self.conv2(x)))) #Img size: 16x16 -> 8x8
 
     #3. 3rd conv layer -> reLU activation -> pooling 
-    x = self.pool(F.relu(self.conv3(x))) #Img size: 8x8 -> 4x4
+    x = self.pool(F.relu(self.bn3(self.conv3(x)))) #Img size: 8x8 -> 4x4
 
     #4. Flatten 3D feature maps into a 1D vector
     x = x.view(-1, 128 * 4 * 4) #Adjusted values for new size
@@ -140,7 +143,7 @@ for epoch in range(EPOCHS):
       correct += (predicted == labels).sum().item()
       total += labels.size(0)
   
-  accuracy = 100 * correct / total  # Should now be <= 100%
+  accuracy = 100 * correct / total
   accuracies.append(accuracy)
   print(f'Epoch {epoch+1}/{EPOCHS} - Loss: {epoch_loss:.4f}, Accuracy: {accuracy:.2f}%')
 
