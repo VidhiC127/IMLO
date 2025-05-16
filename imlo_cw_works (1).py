@@ -15,7 +15,7 @@ torch.manual_seed(42)
 
 # Set hyperparameters
 Batch_Size = 64
-EPOCHS = 50
+EPOCHS = 30
 
 temp_set = datasets.CIFAR10("Data", download-True, train=True, transform=None)
 
@@ -35,6 +35,9 @@ test_set = datasets.CIFAR10("Data", download=True, train=False, transform=transf
 test_loader = DataLoader(test_set, batch_size=Batch_Size, shuffle=False)
 
 # Split into train and validation sets (80-20 split)
+train_size = int(0.8 * len(full_train_set))
+val_size = len(full_train_set) - train_size
+
 train_set, val_set = random_split(full_train_set, [train_size, val_size])
 train_loader = DataLoader(train_set, batch_size=Batch_Size, shuffle=True)
 val_loader = DataLoader(val_set, batch_size=Batch_Size, shuffle=False
@@ -67,7 +70,7 @@ class CIFAR10_nn(nn.Module):
 
     #Dropout randomly turns off 25% of neurons during training
     #--> Prevents nn from memorising the training data
-    self.dropout = nn.Dropout(0.1)
+    self.dropout = nn.Dropout(0.3)
 
   #Defines how data flows through the network
   def forward(self, x):
@@ -123,7 +126,10 @@ def evaluate(model, data_loader):
       total += labels.size(0)
       correct += (predicted == labels).sum().item()
   return 100 * correct / total
-    
+
+best_val_accuracy = 0
+no_improvments_num = 0
+
 for epoch in range(EPOCHS):
   running_loss = 0.0
   net.train()
@@ -149,7 +155,18 @@ for epoch in range(EPOCHS):
 
   train_accuracies.append(train_acc)
   val_accuracies.append(val_acc)
-  
+
+  if val_acc > best_val_accuracy:
+    best_val_accuracy = val_acc
+    no_improvments_num = 0
+    torch.save(net.state_dict(), 'Best_Model.pth')
+  else:
+    no_improvments_num += 1
+    # Stop if there are no improvements for 5 epochs
+    if no_improvments_num >= 5:
+      print(f"Early stopping at epoch {epoch+1}")
+      break
+    
   print(f'Epoch {epoch+1}/{EPOCHS}:')
   print(f'  Loss: {epoch_loss:.4f}  Training Accuracy: {train_acc:.2f}%  Validation Accuracy: {val_acc:.2f}%')
   print("")
@@ -180,4 +197,5 @@ plt.legend()
 plt.tight_layout()
 plt.show()
 
-torch.save(net.state_dict(), 'cifar10_model.pth')
+#Save model
+#torch.save(net.state_dict(), 'cifar10_model.pth')
