@@ -24,28 +24,38 @@ mean = train_set.data.mean(axis=(0,1,2)) / 255
 std = train_set.data.std(axis=(0,1,2)) / 255
 print(f"Mean = {mean} Std = {std}")
 
-transform = transforms.Compose([
+# Data augmentation for training data
+train_transform = transforms.Compose([
+    transforms.RandomHorizontalFlip(),
+    transforms.RandomRotation(10),
     transforms.ToTensor(),
     transforms.Normalize(mean, std)
 ])
 
-full_train_set = datasets.CIFAR10("Data", download=True, train=True, transform=transform)
+test_transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize(mean, std)
+])
 
-test_set = datasets.CIFAR10("Data", download=True, train=False, transform=transform) # was test_tr
+
+full_train_set = datasets.CIFAR10("Data", train=True, download=True, transform=train_transform)
+
+test_set = datasets.CIFAR10("Data", train=False, download=True, transform=test_transform)
 test_loader = DataLoader(test_set, batch_size=Batch_Size, shuffle=False)
 
-# Split into train and validation sets (80-20 split)
+# Split into train (80%) and validation (20%)
 train_size = int(0.8 * len(full_train_set))
 val_size = len(full_train_set) - train_size
 
 train_set, val_set = random_split(full_train_set, [train_size, val_size])
 train_loader = DataLoader(train_set, batch_size=Batch_Size, shuffle=True)
-val_loader = DataLoader(val_set, batch_size=Batch_Size, shuffle=False
+val_loader = DataLoader(val_set, batch_size=Batch_Size, shuffle=False)
 
-print(f"Training set: {len(train_set)}")
-print(f"Testing set: {len(test_set)}")
-print(f"Validation set: {len(val_set)}")
-print(f"Classes: {full_train_set.classes}")
+
+print(f"Training samples: {len(train_set)}")
+print(f"Validation samples: {len(val_set)}")
+print(f"Test samples: {len(test_set)}")
+print("Classes:", full_train_set.classes)
 
 class CIFAR10_nn(nn.Module):
   def __init__(self):
@@ -99,7 +109,7 @@ class CIFAR10_nn(nn.Module):
     return x
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-print(device)
+print(f'Device: {device}')
 
 net = CIFAR10_nn()
 print(net)
@@ -163,7 +173,7 @@ for epoch in range(EPOCHS):
   else:
     no_improvments_num += 1
     # Stop if there are no improvements for 5 epochs
-    if no_improvments_num >= 5:
+    if no_improvments_num >= 7:
       print(f"Early stopping at epoch {epoch+1}")
       break
     
