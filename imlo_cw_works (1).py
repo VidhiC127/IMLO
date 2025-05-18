@@ -70,15 +70,15 @@ class CIFAR10_nn(nn.Module):
     self.conv3 = nn.Conv2d(64, 128, 3, padding=1) #New conv layer
     self.bn3 = nn.BatchNorm2d(128) #Added batch norm for conv3 output
 
-    #pooling layers reduce image size, takes max value in each 2x2 region
+    # Pooling layers reduce image size, takes max value in each 2x2 region
     self.pool = nn.MaxPool2d(2, 2)
 
-    #fully connected layers connect every input to every output
+    # Fully connected layers connect every input to every output
     self.fc1 = nn.Linear(128 * 4 * 4, 512) #adjusted input size
     self.fc2 = nn.Linear(512, 256)
     self.fc3 = nn.Linear(256, 10)
 
-    #Dropout randomly turns off 25% of neurons during training
+    #Dropout randomly turns off 30% of neurons during training
     #--> Prevents nn from memorising the training data
     self.dropout = nn.Dropout(0.3)
 
@@ -141,6 +141,11 @@ best_val_accuracy = 0
 no_improvments_num = 0
 
 for epoch in range(EPOCHS):
+  # Random seed for every epoch
+  if epoch > 0:
+    torch.seed()
+    np.random.seed(int(torch.randint(0, 10000, (1,))))
+    
   running_loss = 0.0
   net.train()
   for i, data in enumerate(train_loader, 0):
@@ -173,7 +178,7 @@ for epoch in range(EPOCHS):
   else:
     no_improvments_num += 1
     # Stop if there are no improvements for 5 epochs
-    if no_improvments_num >= 7:
+    if no_improvments_num >= 5:
       print(f"Early stopping at epoch {epoch+1}")
       break
     
