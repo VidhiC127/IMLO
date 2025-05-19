@@ -173,6 +173,7 @@ def main():
             no_improvments_num += 1
             if no_improvments_num >= 5:
                 print(f"Early stopping at epoch {epoch+1}")
+                print(f'  Loss: {epoch_loss:.4f}  Training Accuracy: {train_acc:.2f}%  Validation Accuracy: {val_acc:.2f}%')
                 break
 
         print(f'Epoch {epoch+1}/{EPOCHS}:')
